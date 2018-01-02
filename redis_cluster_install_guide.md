@@ -72,11 +72,11 @@ cp redis-6379.conf redis-7379.conf
 chown redis:redis redis-7379.conf
 ```
 
-分别修改配置文件`redis:redis`和`redis-7379.conf`中下列配置项：
+分别修改配置文件`redis-6379.conf`和`redis-7379.conf`中下列配置项：
 
 ```
 daemonize yes #后台启动
-port 7001 #修改端口号，从7001到7006
+port 7001 #修改端口号，从7001到7006(以实际使用为准)
 pidfile /var/run/redis/redis-server-6379.pid
 logfile /var/log/redis/redis-server-6379.log
 dbfilename dump-6379.rdb
@@ -219,3 +219,25 @@ S: 10c097c429ca24f8720986c6b66f0688bfb901ee 192.168.1.1:7379
 ```
 
 上面显示创建成功，有3个主节点，3个从节点，每个节点都是成功连接状态。
+```
+:~#redis-cli -h 192.168.2.40
+192.168.2.40:6379> CLUSTER info
+cluster_state:ok
+cluster_slots_assigned:16384
+cluster_slots_ok:16384
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:6
+cluster_size:3
+cluster_current_epoch:6
+cluster_my_epoch:5
+cluster_stats_messages_sent:1610
+cluster_stats_messages_received:1600
+192.168.2.40:6379> CLUSTER  nodes
+bf49f61dca9c3e3d2ac640ef7f0ac8b5d63237b3 192.168.2.40:6379 myself,master - 0 0 5 connected 10923-16383
+b93e7c0302692ccf3a33ef9075cab0c6f88da95e 192.168.2.31:6379 master - 0 1514889538409 3 connected 5461-10922
+3ae94e9f836982d0ef4b6709d3183303c4829cc5 192.168.2.21:6379 master - 0 1514889539914 1 connected 0-5460
+532d01b0fade80aba5163aae144d5b3d6a00953b 192.168.2.40:7379 slave bf49f61dca9c3e3d2ac640ef7f0ac8b5d63237b3 0 1514889540916 6 connected
+fa988efcfe8cabe248a3694199317ddf15274b52 192.168.2.21:7379 slave b93e7c0302692ccf3a33ef9075cab0c6f88da95e 0 1514889537909 3 connected
+7c09c6836c662abd0e66c35e781c3b14b8c8d21b 192.168.2.31:7379 slave 3ae94e9f836982d0ef4b6709d3183303c4829cc5 0 1514889538911 4 connected
+```
