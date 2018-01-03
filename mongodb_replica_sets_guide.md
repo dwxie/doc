@@ -60,6 +60,19 @@ sudo apt-get update
 sudo apt-get install -y mongodb-org
 ```
 
+添加、启动服务、修改配置文件
+```
+systemctl enable mongod
+vim /etc/mongod.conf
+net:
+  port: 27017
+  bindIp: 0.0.0.0
+  
+replication:
+  replSetName: zhyy
+```
+保存后退出，并启动服务:systemctl start mongod
+
 创建集群
 
 ```
@@ -90,9 +103,9 @@ Server has startup warnings:
 2017-06-14T15:18:53.678+0800 I CONTROL  [initandlisten] 
 > use admin
 switched to db admin
-> config = { _id:"lingda", members:[ {_id:0, host:"192.168.100.4:27017"}, {_id:1, host:"192.168.100.17:27017"}, {_id:2, host:"192.168.100.18:27017"}] }
+> config = { _id:"zhyy", members:[ {_id:0, host:"192.168.100.4:27017"}, {_id:1, host:"192.168.100.17:27017"}, {_id:2, host:"192.168.100.18:27017"}] }
 {
-	"_id" : "lingda",
+	"_id" : "zhyy",
 	"members" : [
 		{
 			"_id" : 0,
@@ -110,9 +123,9 @@ switched to db admin
 }
 > rs.initiate(config);
 { "ok" : 1 }
-lingda:SECONDARY> rs.status();
+zhyy:SECONDARY> rs.status();
 {
-	"set" : "lingda",
+	"set" : "zhyy",
 	"date" : ISODate("2017-06-14T09:03:14.815Z"),
 	"myState" : 1,
 	"term" : NumberLong(1),
@@ -229,19 +242,19 @@ Server has startup warnings:
 2017-06-14T15:11:54.123+0800 I CONTROL  [initandlisten] ** WARNING: /sys/kernel/mm/transparent_hugepage/defrag is 'always'.
 2017-06-14T15:11:54.123+0800 I CONTROL  [initandlisten] **        We suggest setting it to 'never'
 2017-06-14T15:11:54.123+0800 I CONTROL  [initandlisten] 
-lingda:PRIMARY> use test
+zhyy:PRIMARY> use test
 switched to db test
-lingda:PRIMARY> db.test.insert({"id":"123"},{"name":"hello"});
+zhyy:PRIMARY> db.test.insert({"id":"123"},{"name":"hello"});
 WriteResult({ "nInserted" : 1 })
-lingda:PRIMARY> 
+zhyy:PRIMARY> 
 ```
 
 在一个从库上验证数据
 
 ```
-lingda:SECONDARY> use test
+zhyy:SECONDARY> use test
 switched to db test
-lingda:SECONDARY> show tables;
+zhyy:SECONDARY> show tables;
 2017-06-20T10:45:27.057+0800 E QUERY    [thread1] Error: listCollections failed: {
 	"ok" : 0,
 	"errmsg" : "not master and slaveOk=false",
@@ -256,13 +269,13 @@ shellHelper.show@src/mongo/shell/utils.js:762:9
 shellHelper@src/mongo/shell/utils.js:659:15
 @(shellhelp2):1:1
 # mongodb默认是从主节点读写数据的，副本节点上不允许读，需要设置副本节点可以读。
-lingda:SECONDARY> db.getMongo().setSlaveOk();
-lingda:SECONDARY> show tables;
+zhyy:SECONDARY> db.getMongo().setSlaveOk();
+zhyy:SECONDARY> show tables;
 system.indexes
 test
-lingda:SECONDARY> db.test.find();
+zhyy:SECONDARY> db.test.find();
 { "_id" : ObjectId("5940fc8da92280f14a7a9d65"), "id" : "123" }
-lingda:SECONDARY> 
+zhyy:SECONDARY> 
 ```
 
 ### 验证primary、secondary自动切换
@@ -272,9 +285,9 @@ lingda:SECONDARY>
 关闭primary
 
 ```
-lingda:PRIMARY> use admin
+zhyy:PRIMARY> use admin
 switched to db admin
-lingda:PRIMARY> db.shutdownServer();
+zhyy:PRIMARY> db.shutdownServer();
 server should be down...
 2017-06-20T11:19:04.585+0800 I NETWORK  [thread1] trying reconnect to 127.0.0.1:27017 (127.0.0.1) failed
 2017-06-20T11:19:04.585+0800 W NETWORK  [thread1] Failed to connect to 127.0.0.1:27017, in(checking socket for error after poll), reason: Connection refused
@@ -290,9 +303,9 @@ server should be down...
 观察`stateStr`字段，可以看到原先的primary是离线状态。
 
 ```
-lingda:PRIMARY> rs.status();
+zhyy:PRIMARY> rs.status();
 {
-	"set" : "lingda",
+	"set" : "zhyy",
 	"date" : ISODate("2017-06-20T03:21:07.038Z"),
 	"myState" : 1,
 	"term" : NumberLong(7),
@@ -379,7 +392,7 @@ lingda:PRIMARY> rs.status();
 	],
 	"ok" : 1
 }
-lingda:PRIMARY> 
+zhyy:PRIMARY> 
 ```
 
 重新启动原来就的primary库，然后查看集群状态，状态将会变成secondary。
