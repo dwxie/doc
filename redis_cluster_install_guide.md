@@ -76,7 +76,7 @@ chown redis:redis redis-7379.conf
 
 ```
 daemonize yes #后台启动
-port 7001 #修改端口号，从7001到7006(以实际使用为准)
+port 7001 #修改端口号，（若6个实例在同一节点，需分配6个不同端口，否则只需要通服务器上端口不冲突即可）
 pidfile /var/run/redis/redis-server-6379.pid
 logfile /var/log/redis/redis-server-6379.log
 dbfilename dump-6379.rdb
